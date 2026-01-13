@@ -18,56 +18,100 @@ A Java application that executes `clean build` for multiple Maven and Gradle pro
 - Maven (to compile this project)
 - Maven and/or Gradle installed (to build the target projects)
 
-## Build
+## Installation
 
-```bash
-mvn clean package
-```
+### Download from GitHub Releases (Recommended)
 
-This will generate an executable JAR at `target/multiple-builder-1.0-SNAPSHOT.jar`.
+Download the latest release from the [GitHub Releases page](../../releases/latest). Each release includes:
+- `multiple-builder-{x}.jar` - The executable JAR file
+- `multiple-builder.bat` - Windows wrapper script
+- `multiple-builder.sh` - Linux/Mac wrapper script
 
-## Installation as Terminal Command
+#### Windows Installation
 
-### Option 1: Using the provided wrapper scripts (Recommended)
+1. **Download the files:**
+   - Download `multiple-builder-{x}.jar`
+   - Download `multiple-builder.bat`
 
-The project includes `multiple-builder.bat` (Windows) and `multiple-builder.sh` (Linux/Mac) scripts that simplify execution.
+2. **Choose a location:**
+   - Create a directory for the application (e.g., `C:\tools\multiple-builder`)
+   - Place both files in that directory
 
-#### Windows
+3. **Add to PATH:**
+   - Right-click on "This PC" → Properties → Advanced system settings
+   - Click "Environment Variables"
+   - Under "User variables" or "System variables", select "Path" and click "Edit"
+   - Click "New" and add the path to your directory (e.g., `C:\tools\multiple-builder`)
+   - Click "OK" to save all dialogs
+   - **Restart your terminal/command prompt**
 
-1. After building the project with `mvn clean package`, copy both files to a directory in your PATH:
-   - `multiple-builder.bat`
-   - `target\multiple-builder-1.0.jar`
-   
-   For example, create `C:\tools\multiple-builder\` and add it to your PATH, or use an existing directory like `C:\Program Files\multiple-builder\`
-
-2. Verify installation:
+4. **Verify installation:**
    ```batch
    multiple-builder -V
    multiple-builder --help
    ```
 
-#### Linux/Mac
+#### Linux/Mac Installation
 
-1. After building the project with `mvn clean package`, copy both files to a directory:
+1. **Download the files:**
+   - Download `multiple-builder-{x}.jar`
+   - Download `multiple-builder.sh`
+
+2. **Choose a location:**
    ```bash
-   sudo mkdir -p /usr/local/lib/multiple-builder
-   sudo cp target/multiple-builder-1.0.jar /usr/local/lib/multiple-builder/
-   sudo cp multiple-builder.sh /usr/local/bin/multiple-builder
-   sudo chmod +x /usr/local/bin/multiple-builder
+   # Option A: User directory (no sudo required)
+   mkdir -p ~/tools/multiple-builder
+   cd ~/tools/multiple-builder
+   # Move downloaded files here
+   
+   # Option B: System-wide (requires sudo)
+   sudo mkdir -p /usr/local/bin
+   # Move downloaded files here
    ```
 
-2. Edit `/usr/local/bin/multiple-builder` to point to the correct JAR location:
+3. **Make the script executable:**
    ```bash
-   JAR_PATH="/usr/local/lib/multiple-builder/multiple-builder-1.0.jar"
+   chmod +x multiple-builder.sh
    ```
 
-3. Verify installation:
+4. **Add to PATH (if using Option A):**
+   
+   Add this line to your shell configuration file:
+   - **For bash**: Add to `~/.bashrc` or `~/.bash_profile`
+   - **For zsh**: Add to `~/.zshrc`
+   
    ```bash
-   multiple-builder -V
-   multiple-builder --help
+   export PATH="$HOME/tools/multiple-builder:$PATH"
+   ```
+   
+   Reload your shell configuration:
+   ```bash
+   source ~/.bashrc  # or source ~/.zshrc for zsh
+   ```
+   
+   > **Note:** If you chose Option B (`/usr/local/bin`), it's typically already in your PATH, so this step is not needed.
+
+5. **Verify installation:**
+   ```bash
+   multiple-builder.sh -V
+   multiple-builder.sh --help
    ```
 
-### Option 2: Create your own wrapper script
+### Build from Source
+
+If you prefer to build from source:
+
+```bash
+mvn clean package
+```
+
+This will generate an executable JAR at `target/multiple-builder-{x}.jar`.
+
+After building, follow the installation steps above but use the JAR file from the `target` directory and the wrapper scripts from the project root.
+
+### Advanced: Create a custom wrapper script
+
+If you want to customize the wrapper script or run the JAR directly:
 
 #### Windows
 
@@ -75,23 +119,30 @@ Create a file `multiple-builder.bat` in a directory that's in your PATH:
 
 ```batch
 @echo off
-java -jar "C:\path\to\multiple-builder-1.0.jar" %*
+java -jar "C:\path\to\multiple-builder-{x}.jar" %*
 ```
 
 Update the path to match your JAR file location.
 
 #### Linux/Mac
 
-Create a file `multiple-builder` in `/usr/local/bin/`:
+Create a file `multiple-builder` in a directory in your PATH (e.g., `/usr/local/bin/`):
 
 ```bash
 #!/bin/bash
-java -jar /path/to/multiple-builder-1.0.jar "$@"
+java -jar /path/to/multiple-builder-{x}.jar "$@"
 ```
 
 Update the path to match your JAR file location, then make it executable:
 ```bash
 chmod +x /usr/local/bin/multiple-builder
+```
+
+#### Running directly with Java
+
+You can always run the JAR directly without a wrapper:
+```bash
+java -jar multiple-builder-{x}.jar -p /path/to/projects
 ```
 
 ## Usage

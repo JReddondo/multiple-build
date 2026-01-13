@@ -1,0 +1,110 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggered on version tags like v1.0, v1.0.1, etc.
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Required to create releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Get version from pom.xml
+        id: get_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Create release tag name
+        id: tag_name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v${{ steps.get_version.outputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release-artifacts
+          cp target/multiple-builder-${{ steps.get_version.outputs.version }}.jar release-artifacts/
+          cp multiple-builder.sh release-artifacts/
+          cp multiple-builder.bat release-artifacts/
+          
+          # Make shell script executable
+          chmod +x release-artifacts/multiple-builder.sh
+          
+          echo "Release artifacts prepared:"
+          ls -lh release-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag_name.outputs.tag }}
+          name: Release ${{ steps.tag_name.outputs.tag }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release-artifacts/multiple-builder-${{ steps.get_version.outputs.version }}.jar
+            release-artifacts/multiple-builder.sh
+            release-artifacts/multiple-builder.bat
+          body: |
+            ## Multiple Builder ${{ steps.tag_name.outputs.tag }}
+            
+            A Java application that executes `clean build` for multiple Maven and Gradle projects in a root directory.
+            
+            ### 📦 Downloads
+            
+            - **multiple-builder-${{ steps.get_version.outputs.version }}.jar** - Executable JAR file
+            - **multiple-builder.bat** - Windows wrapper script
+            - **multiple-builder.sh** - Linux/Mac wrapper script
+            
+            ### 🚀 Quick Start
+            
+            **Windows:**
+            1. Download the `.jar` and `.bat` files
+            2. Place them in a folder (e.g., `C:\tools\multiple-builder`)
+            3. Add that folder to your PATH
+            4. Run: `multiple-builder -p <path-to-projects>`
+            
+            **Linux/Mac:**
+            1. Download the `.jar` and `.sh` files
+            2. Place them in a folder (e.g., `~/tools/multiple-builder`)
+            3. Make the script executable: `chmod +x multiple-builder.sh`
+            4. Add the folder to your PATH
+            5. Run: `multiple-builder.sh -p <path-to-projects>`
+            
+            ### 📖 Documentation
+            
+            For detailed installation instructions, including how to add the folder to your PATH, see the [README](https://github.com/${{ github.repository }}/blob/main/README.md#installation).
+            
+            ### ✅ Requirements
+            
+            - Java 21 or higher
+            
+            ### 📝 What's Changed
+            
+            See the release notes below for details.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
