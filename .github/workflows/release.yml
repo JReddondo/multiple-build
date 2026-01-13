@@ -46,15 +46,26 @@ jobs:
       - name: Prepare release artifacts
         run: |
           mkdir -p release-artifacts
-          cp target/multiple-builder-${{ steps.get_version.outputs.version }}.jar release-artifacts/
-          cp multiple-builder.sh release-artifacts/
-          cp multiple-builder.bat release-artifacts/
+          
+          # Create distribution directory with all files
+          mkdir -p dist/multiple-builder
+          cp target/multiple-builder-${{ steps.get_version.outputs.version }}.jar dist/multiple-builder/
+          cp multiple-builder.sh dist/multiple-builder/
+          cp multiple-builder.bat dist/multiple-builder/
           
           # Make shell script executable
-          chmod +x release-artifacts/multiple-builder.sh
+          chmod +x dist/multiple-builder/multiple-builder.sh
+          
+          # Create ZIP file
+          cd dist
+          zip -r ../release-artifacts/multiple-builder-${{ steps.get_version.outputs.version }}.zip multiple-builder/
+          cd ..
           
           echo "Release artifacts prepared:"
           ls -lh release-artifacts/
+          echo ""
+          echo "ZIP contents:"
+          unzip -l release-artifacts/multiple-builder-${{ steps.get_version.outputs.version }}.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -65,34 +76,35 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            release-artifacts/multiple-builder-${{ steps.get_version.outputs.version }}.jar
-            release-artifacts/multiple-builder.sh
-            release-artifacts/multiple-builder.bat
+            release-artifacts/multiple-builder-${{ steps.get_version.outputs.version }}.zip
           body: |
             ## Multiple Builder ${{ steps.tag_name.outputs.tag }}
             
             A Java application that executes `clean build` for multiple Maven and Gradle projects in a root directory.
             
-            ### 📦 Downloads
+            ### 📦 Download
             
-            - **multiple-builder-${{ steps.get_version.outputs.version }}.jar** - Executable JAR file
-            - **multiple-builder.bat** - Windows wrapper script
-            - **multiple-builder.sh** - Linux/Mac wrapper script
+            **multiple-builder-${{ steps.get_version.outputs.version }}.zip** - Complete package containing:
+            - `multiple-builder-${{ steps.get_version.outputs.version }}.jar` - Executable JAR file
+            - `multiple-builder.bat` - Windows wrapper script
+            - `multiple-builder.sh` - Linux/Mac wrapper script
             
             ### 🚀 Quick Start
             
             **Windows:**
-            1. Download the `.jar` and `.bat` files
-            2. Place them in a folder (e.g., `C:\tools\multiple-builder`)
-            3. Add that folder to your PATH
-            4. Run: `multiple-builder -p <path-to-projects>`
+            1. Download and extract the ZIP file
+            2. Move the `multiple-builder` folder to a location (e.g., `C:\tools\`)
+            3. Add that folder to your PATH (e.g., `C:\tools\multiple-builder`)
+            4. Restart your terminal
+            5. Run: `multiple-builder -p <path-to-projects>`
             
             **Linux/Mac:**
-            1. Download the `.jar` and `.sh` files
-            2. Place them in a folder (e.g., `~/tools/multiple-builder`)
-            3. Make the script executable: `chmod +x multiple-builder.sh`
-            4. Add the folder to your PATH
-            5. Run: `multiple-builder.sh -p <path-to-projects>`
+            1. Download and extract the ZIP file
+            2. Move the `multiple-builder` folder to a location (e.g., `~/tools/`)
+            3. Make the script executable: `chmod +x ~/tools/multiple-builder/multiple-builder.sh`
+            4. Add the folder to your PATH: `export PATH="$HOME/tools/multiple-builder:$PATH"`
+            5. Add the export line to your `~/.bashrc` or `~/.zshrc` to make it permanent
+            6. Run: `multiple-builder.sh -p <path-to-projects>`
             
             ### 📖 Documentation
             
